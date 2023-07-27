@@ -1,10 +1,27 @@
 import React from "react";
 import Header from "../common/Header";
 import Container from "../common/Container";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useItems } from "../shared/router";
 
 export default function Detail() {
+  const { id } = useParams();
+  const { items, deleteItem } = useItems();
   const navigate = useNavigate();
+
+  const currentItem = items.find((item) => item.id === id);
+
+  if (!currentItem) {
+    return (
+      <>
+        <Header />
+        <Container>
+          <div>해당 항목을 찾을 수 없습니다.</div>
+        </Container>
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
@@ -16,7 +33,7 @@ export default function Detail() {
             padding: "12px",
           }}
         >
-          제목
+          {currentItem.title}
         </h1>
         <div
           style={{
@@ -26,10 +43,7 @@ export default function Detail() {
             padding: "12px",
           }}
         >
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad doloribus
-          blanditiis vitae sapiente. Expedita delectus nihil animi pariatur,
-          labore quod officiis dolor fugit. Mollitia quod, delectus velit
-          deleniti nihil veniam!
+          {currentItem.content}
         </div>
         <div
           style={{
@@ -56,7 +70,12 @@ export default function Detail() {
           </button>
           <button
             onClick={() => {
-              alert("삭제할까?");
+              const isDeletable = window.confirm("정말 삭제하시겠습니까?");
+              if (isDeletable) {
+                deleteItem(id);
+                alert("삭제되었습니다.");
+                navigate("/");
+              }
             }}
             style={{
               border: "none",
