@@ -1,10 +1,17 @@
-import React from "react";
 import Header from "../common/Header";
 import Container from "../common/Container";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { deletePost } from "../redux/posts";
 
 export default function Detail() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const posts = useSelector((state) => state.posts);
+  const dispatch = useDispatch();
+  const post = posts.find((post) => post.id === id);
+
   return (
     <>
       <Header />
@@ -16,7 +23,7 @@ export default function Detail() {
             padding: "12px",
           }}
         >
-          제목
+          {post?.title}
         </h1>
         <div
           style={{
@@ -26,10 +33,7 @@ export default function Detail() {
             padding: "12px",
           }}
         >
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad doloribus
-          blanditiis vitae sapiente. Expedita delectus nihil animi pariatur,
-          labore quod officiis dolor fugit. Mollitia quod, delectus velit
-          deleniti nihil veniam!
+          {post?.content}
         </div>
         <div
           style={{
@@ -40,7 +44,11 @@ export default function Detail() {
         >
           <button
             onClick={() => {
-              navigate("/edit");
+              navigate("/edit", {
+                state: {
+                  post,
+                },
+              });
             }}
             style={{
               border: "none",
@@ -56,7 +64,11 @@ export default function Detail() {
           </button>
           <button
             onClick={() => {
-              alert("삭제할까?");
+              const result = window.confirm("정말로 삭제하시겠습니까?");
+              if (result) {
+                dispatch(deletePost(post.id));
+                navigate("/");
+              }
             }}
             style={{
               border: "none",

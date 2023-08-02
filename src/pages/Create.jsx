@@ -1,9 +1,44 @@
-import React from "react";
-
 import Header from "../common/Header";
 import Container from "../common/Container";
+import { useState, useCallback } from "react";
+import { nanoid } from "nanoid";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addPost } from "../redux/posts";
 
 export default function Create() {
+  const dispatch = useDispatch();
+  const [inputs, setInputs] = useState({
+    title: "",
+    content: "",
+  });
+  const navigate = useNavigate();
+
+  const onChangeHandler = (e) => {
+    setInputs((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (inputs.title.trim() === "" || inputs.content.trim() === "") {
+        alert("제목과 내용을 모두 입력해주세요.");
+      } else {
+        dispatch(
+          addPost({
+            id: nanoid(),
+            author: "작성자",
+            ...inputs,
+          })
+        );
+        navigate("/");
+      }
+    },
+    [dispatch, inputs, navigate]
+  );
   return (
     <>
       <Header />
@@ -15,13 +50,11 @@ export default function Create() {
             flexDirection: "column",
             justifyContent: "space-evenly",
           }}
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.log("제출!");
-          }}
+          onSubmit={handleSubmit}
         >
           <div>
             <input
+              name="title"
               placeholder="제목"
               style={{
                 width: "100%",
@@ -32,6 +65,8 @@ export default function Create() {
                 padding: "8px",
                 boxSizing: "border-box",
               }}
+              value={inputs.title}
+              onChange={onChangeHandler}
             />
           </div>
           <div
@@ -40,6 +75,7 @@ export default function Create() {
             }}
           >
             <textarea
+              name="content"
               placeholder="내용"
               style={{
                 resize: "none",
@@ -51,6 +87,8 @@ export default function Create() {
                 padding: "12px",
                 boxSizing: "border-box",
               }}
+              value={inputs.content}
+              onChange={onChangeHandler}
             />
           </div>
           <button

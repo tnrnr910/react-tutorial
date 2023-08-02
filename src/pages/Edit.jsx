@@ -1,8 +1,26 @@
-import React, { Fragment } from "react";
+import { Fragment, useState } from "react";
 import Header from "../common/Header";
 import Container from "../common/Container";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { editPost } from "../redux/posts";
 
 export default function Edit() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const [inputs, setInputs] = useState({
+    title: state?.post.title || "",
+    content: state?.post.content || "",
+  });
+
+  const dispatch = useDispatch();
+  const onChangeHandler = (e) => {
+    setInputs((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
   return (
     <Fragment>
       <Header />
@@ -16,11 +34,20 @@ export default function Edit() {
           }}
           onSubmit={(e) => {
             e.preventDefault();
-            console.log("제출!");
+            if (state) {
+              dispatch(
+                editPost({
+                  ...state.post,
+                  ...inputs,
+                })
+              );
+            }
+            navigate("/");
           }}
         >
           <div>
             <input
+              name="title"
               placeholder="제목"
               style={{
                 width: "100%",
@@ -31,6 +58,8 @@ export default function Edit() {
                 padding: "8px",
                 boxSizing: "border-box",
               }}
+              value={inputs.title}
+              onChange={onChangeHandler}
             />
           </div>
           <div
@@ -39,6 +68,7 @@ export default function Edit() {
             }}
           >
             <textarea
+              name="content"
               placeholder="내용"
               style={{
                 resize: "none",
@@ -50,6 +80,8 @@ export default function Edit() {
                 padding: "12px",
                 boxSizing: "border-box",
               }}
+              value={inputs.content}
+              onChange={onChangeHandler}
             />
           </div>
           <button

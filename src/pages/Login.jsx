@@ -1,8 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../common/Header";
 import Container from "../common/Container";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+      navigate("/");
+    } catch (error) {
+      alert("로그인에 실패하였습니다.");
+    }
+  };
+
   return (
     <>
       <Header />
@@ -23,6 +40,7 @@ export default function Login() {
               }}
             >
               <input
+                type="email"
                 placeholder="이메일"
                 style={{
                   width: "100%",
@@ -33,6 +51,8 @@ export default function Login() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div
@@ -42,8 +62,8 @@ export default function Login() {
               }}
             >
               <input
-                placeholder="비밀번호"
                 type="password"
+                placeholder="비밀번호"
                 style={{
                   width: "100%",
                   height: "40px",
@@ -53,6 +73,8 @@ export default function Login() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div
@@ -62,6 +84,7 @@ export default function Login() {
               }}
             >
               <button
+                onClick={handleLogin}
                 style={{
                   width: "100%",
                   border: "none",
@@ -89,6 +112,9 @@ export default function Login() {
                   backgroundColor: "#FF6969",
                   color: "white",
                   cursor: "pointer",
+                }}
+                onClick={() => {
+                  navigate("/signup");
                 }}
               >
                 회원가입하러 가기
