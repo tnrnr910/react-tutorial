@@ -1,22 +1,52 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../common/Header";
 import Container from "../common/Container";
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../lib/firebase/firebase";
+import { LOGIN_ERROR_CODES } from "../lib/firebase/error";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const changeHandler = (e) => {
+    const { name, value } = e.target;
+    setInputs((prev) => {
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
+  };
+
+  const isValidForm = () => {
+    if (!inputs.email) {
+      alert("이메일을 입력해주세요.");
+      return false;
+    }
+
+    if (!inputs.password) {
+      alert("비밀번호를 입력해주세요.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const login = async () => {
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, inputs.email, inputs.password);
       navigate("/");
     } catch (error) {
-      alert("로그인에 실패하였습니다.");
+      if (LOGIN_ERROR_CODES[error.code]) {
+        return alert(LOGIN_ERROR_CODES[error.code]);
+      } else {
+        return alert("알 수 없는 에러입니다. 나중에 다시 시도해보세요.");
+      }
     }
   };
 
@@ -40,7 +70,9 @@ export default function Login() {
               }}
             >
               <input
-                type="email"
+                name="email"
+                value={inputs.email}
+                onChange={changeHandler}
                 placeholder="이메일"
                 style={{
                   width: "100%",
@@ -51,8 +83,6 @@ export default function Login() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div
@@ -62,8 +92,11 @@ export default function Login() {
               }}
             >
               <input
-                type="password"
+                name="password"
                 placeholder="비밀번호"
+                type="password"
+                value={inputs.password}
+                onChange={changeHandler}
                 style={{
                   width: "100%",
                   height: "40px",
@@ -73,8 +106,6 @@ export default function Login() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div
@@ -84,7 +115,12 @@ export default function Login() {
               }}
             >
               <button
-                onClick={handleLogin}
+                type="button"
+                onClick={async () => {
+                  if (isValidForm()) {
+                    await login();
+                  }
+                }}
                 style={{
                   width: "100%",
                   border: "none",
@@ -104,6 +140,7 @@ export default function Login() {
               }}
             >
               <button
+                type="button"
                 style={{
                   width: "100%",
                   border: "none",

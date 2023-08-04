@@ -1,57 +1,68 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../common/Header";
 import Container from "../common/Container";
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import { auth } from "../firebase"; // firebase.js에서 auth를 불러옴
+import { useNavigate } from "react-router-dom";
+import { auth } from "../lib/firebase/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setUser } from "../redux/user";
+import { SIGNUP_ERROR_CODES } from "../lib/firebase/error";
 
 export default function Signup() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+    passwordConfirm: "",
+  });
 
-  const handleSignup = async (e) => {
-    e.preventDefault();
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
-    console.log("handleSignup 함수 호출 확인");
-    if (password !== passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
+  const changeHandler = (e) => {
+    const { name, value } = e.target;
+    setInputs((prev) => {
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
+  };
+
+  const isValidForm = () => {
+    if (!inputs.email) {
+      alert("이메일을 입력해주세요.");
+      return false;
     }
+
+    if (!inputs.password) {
+      alert("비밀번호를 입력해주세요.");
+      return false;
+    }
+
+    if (!inputs.passwordConfirm) {
+      alert("비밀번호 확인을 입력해주세요.");
+      return false;
+    }
+
+    if (inputs.password !== inputs.passwordConfirm) {
+      alert("'비밀번호'와 '비밀번호 확인'이 일치하지 않습니다.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const signup = async () => {
     try {
-      // 비밀번호 유효성 검사
-      if (password.length < 6) {
-        alert("비밀번호는 6자리 이상 입력해주세요.");
-        return;
-      }
-      // 이메일 유효성 검사
-      const emailRegex = /^\S+@\S+\.\S+$/;
-      if (!emailRegex.test(email)) {
-        alert("올바른 이메일 형식을 입력해주세요.");
-        return;
-      }
-
-      // Firebase 회원가입
-      await firebase.auth().createUserWithEmailAndPassword(email, password);
-
-      // 회원가입 완료 시 확인
-      alert("회원가입이 완료되었습니다.");
-      // 입력 필드 초기화
-      setEmail("");
-      setPassword("");
-      setPasswordConfirm("");
-
-      // 회원가입이 완료된 후 로그인 페이지로 이동
-      navigate("/login");
+      await createUserWithEmailAndPassword(auth, inputs.email, inputs.password);
+      dispatch(setUser({ email: inputs.email }));
+      navigate("/");
     } catch (error) {
-      console.error("회원가입 에러:", error);
-      // 회원가입 유효성 검사
-      if (error.code === "auth/email-already-in-use") {
-        alert("중복된 이메일입니다.");
+      if (SIGNUP_ERROR_CODES[error.code]) {
+        return alert(SIGNUP_ERROR_CODES[error.code]);
       } else {
-        console.log(error);
+        return alert("알 수 없는 에러입니다. 나중에 다시 시도해보세요.");
       }
     }
   };
@@ -68,7 +79,7 @@ export default function Signup() {
             alignItems: "center",
           }}
         >
-          <form onSubmit={handleSignup}>
+          <form>
             <div
               style={{
                 width: "360px",
@@ -76,7 +87,9 @@ export default function Signup() {
               }}
             >
               <input
-                type="email"
+                name="email"
+                value={inputs.email}
+                onChange={changeHandler}
                 placeholder="이메일"
                 style={{
                   width: "100%",
@@ -87,8 +100,6 @@ export default function Signup() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div
@@ -98,8 +109,11 @@ export default function Signup() {
               }}
             >
               <input
-                type="password"
+                name="password"
                 placeholder="비밀번호"
+                type="password"
+                value={inputs.password}
+                onChange={changeHandler}
                 style={{
                   width: "100%",
                   height: "40px",
@@ -109,8 +123,6 @@ export default function Signup() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div
@@ -120,8 +132,11 @@ export default function Signup() {
               }}
             >
               <input
-                type="password"
+                name="passwordConfirm"
                 placeholder="비밀번호 확인"
+                type="password"
+                value={inputs.passwordConfirm}
+                onChange={changeHandler}
                 style={{
                   width: "100%",
                   height: "40px",
@@ -131,8 +146,6 @@ export default function Signup() {
                   padding: "8px",
                   boxSizing: "border-box",
                 }}
-                value={passwordConfirm}
-                onChange={(e) => setPasswordConfirm(e.target.value)}
               />
             </div>
             <div
@@ -142,7 +155,12 @@ export default function Signup() {
               }}
             >
               <button
-                type="submit"
+                type="button"
+                onClick={async () => {
+                  if (isValidForm()) {
+                    await signup();
+                  }
+                }}
                 style={{
                   width: "100%",
                   border: "none",
@@ -162,6 +180,7 @@ export default function Signup() {
               }}
             >
               <button
+                type="button"
                 style={{
                   width: "100%",
                   border: "none",

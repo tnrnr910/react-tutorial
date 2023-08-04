@@ -14,6 +14,7 @@ export default function Edit() {
   });
 
   const dispatch = useDispatch();
+
   const onChangeHandler = (e) => {
     setInputs((prev) => ({
       ...prev,

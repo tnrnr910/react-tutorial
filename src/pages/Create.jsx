@@ -1,44 +1,27 @@
 import Header from "../common/Header";
 import Container from "../common/Container";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { nanoid } from "nanoid";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addPost } from "../redux/posts";
 
 export default function Create() {
+  const user = useSelector((state) => state.user);
+
   const dispatch = useDispatch();
+
   const [inputs, setInputs] = useState({
     title: "",
     content: "",
   });
   const navigate = useNavigate();
-
   const onChangeHandler = (e) => {
     setInputs((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
-
-  const handleSubmit = useCallback(
-    (e) => {
-      e.preventDefault();
-      if (inputs.title.trim() === "" || inputs.content.trim() === "") {
-        alert("제목과 내용을 모두 입력해주세요.");
-      } else {
-        dispatch(
-          addPost({
-            id: nanoid(),
-            author: "작성자",
-            ...inputs,
-          })
-        );
-        navigate("/");
-      }
-    },
-    [dispatch, inputs, navigate]
-  );
   return (
     <>
       <Header />
@@ -50,7 +33,17 @@ export default function Create() {
             flexDirection: "column",
             justifyContent: "space-evenly",
           }}
-          onSubmit={handleSubmit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            dispatch(
+              addPost({
+                id: nanoid(),
+                author: user.email,
+                ...inputs,
+              })
+            );
+            navigate("/");
+          }}
         >
           <div>
             <input
