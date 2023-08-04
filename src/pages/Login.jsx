@@ -5,6 +5,8 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../lib/firebase/firebase";
 import { LOGIN_ERROR_CODES } from "../lib/firebase/error";
+import { useSelector, useDispatch } from "react-redux";
+import { setUser } from "../redux/user";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,6 +14,9 @@ export default function Login() {
     email: "",
     password: "",
   });
+
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
   const changeHandler = (e) => {
     const { name, value } = e.target;
@@ -40,6 +45,7 @@ export default function Login() {
   const login = async () => {
     try {
       await signInWithEmailAndPassword(auth, inputs.email, inputs.password);
+      dispatch(setUser({ email: inputs.email }));
       navigate("/");
     } catch (error) {
       if (LOGIN_ERROR_CODES[error.code]) {
